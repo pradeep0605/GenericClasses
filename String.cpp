@@ -39,6 +39,7 @@ class String
      {
        instructionAddress=length=0;
        str=new char[length+1];
+       str[0]='\0';
        delim='\n';
        
      }
@@ -48,6 +49,7 @@ class String
      {
        length=size;
        str=new char[length+1];
+       str[0]='\0';
        delim='\n';
      }
      
@@ -57,7 +59,15 @@ class String
        length=strlen(s);
        str=new char[length+1];
        strcpy(str,s);
+       str[0]='\0';
        delim='\n';
+     }
+     
+     String(const String &s)
+     {
+        str=new char[strlen(s.str)+1];
+        strcpy(str,s.str);
+        delim='\n';	
      }
      
      //this funtion sets the deliminter for reading the string from the key borad
@@ -132,6 +142,7 @@ class String
      // Function prototypes for which definition is available outside the class.     
      friend istream & operator >>(istream &in,String &s);
      operator int();    
+     
      String operator + (char *);
      String operator + (String);
      String operator - (char *);
@@ -140,7 +151,7 @@ class String
      int    operator ==(char *);
      int   toInteger();
      void   operator =(int);
-     String * tokenize(char,int&);  
+     String * tokenize(char,unsigned int&);  
      int indexOf(String );
      String trim(char ch=' ');
 };
@@ -316,15 +327,22 @@ class String
   //For string concatination with string literal 
  String String:: operator + (char *s)
 { 
-  strcat(str,s);
-  return *this; 
+	String temp=String();
+	temp.str=new char[ strlen(this->str) + strlen(s) +1];
+	strcpy(temp.str,this->str);
+	strcat(temp.str,s);
+
+	return temp; 
 }
 
 //For String concatination with another string object.
 String String:: operator +(String s)
 {
-  strcat(str,s.str);
-  return *this;
+	String temp=String();
+	temp.str=new char[ strlen(this->str) + strlen(s.str) +1];
+	strcpy(temp.str,this->str);
+	strcat(temp.str,s.str);
+	return temp; 
 }
 
 
@@ -432,7 +450,7 @@ int countTokens(char *str,char delimiter)
    return no_tokens;
 }
 
-String * String::tokenize(char delimiter,int &n)
+String * String::tokenize(char delimiter,unsigned int &n)
 {
      n=countTokens(str,delimiter);
      if ( n==0 ) 
