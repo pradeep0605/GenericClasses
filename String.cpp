@@ -25,19 +25,22 @@ using namespace std;
 
 class String
 {
-  char *str;                    		 //Character array
+
   char delim; 					 //Deliminter for reading the string from the console		
   int length;
   int    find(String,char);					 //Stores the length of the string
-
+  
   public:
-     //Default constructor
+       char *str;                    		 //Character array
+       short  instructionAddress;  //Only used as a special data member for  sic assembler	
+     //Default constructordd
      //default delimiter is newline character. i.e Reads the string till the new 
      String()
      {
-       length=0;
+       instructionAddress=length=0;
        str=new char[length+1];
        delim='\n';
+       
      }
      
      //constructor which constructs(memory allocation) the string with the specified no of character size.
@@ -102,7 +105,7 @@ class String
      //SUBSTRING 1 TYPE (which gives string from the specified location till the end of string)
      String subString(int index)
      {
-       if(index>strlen(str)|| index<0)
+       if(index>strlen(str) || index<0)
        {
          throw ("Array out of bound exception!"); // if index is out of range(array bound cheking).
        }
@@ -114,9 +117,9 @@ class String
      //		         to the location specified by the "end" variable			
      String subString(int start,int end)
      {
-       if( start<0 || end>strlen(str) -1 || start>end)
+       if( start<0 || end > strlen(str)  || start>end)
        {
-         throw ("Array out of bound exception!");//Array bound cheking.
+         throw("Array out of bound exception!");//Array bound cheking.
        }
       
        String s(this->getLength());
@@ -133,6 +136,8 @@ class String
      String operator + (String);
      String operator - (char *);
      String operator - (String);
+     int    operator ==(String);
+     int    operator ==(char *);
      int   toInteger();
      void   operator =(int);
      String * tokenize(char,int&);  
@@ -203,74 +208,7 @@ class String
    /* This function is used to tokenize(create fragments or parts) the given string    
       into array of string with the given deliminter. i.e "ch" here. (excluding delimiter).
    */
-   String *  String:: tokenize(char ch,int &n)
-   {
-      String temp(this->getLength());
-      strcpy(temp.str,this->str);
-      temp.trim(ch);
-      int count=0,j=0,i,k;
-      int indexes[temp.getLength()];
-      for(i=0;i<temp.getLength();i++)
-      {
-        if(temp.str[i]==ch)
-        {
-          count++;
-          indexes[j]=i;          //count the number of occurance of the delimiter.
-	  j++;
-        }
-      }
-      indexes[j]=temp.getLength()-1;//assign even the last character's index.
-      
-      String *token=new String[count];//create array of string for the number of tokens.
-      
-      for(k=0;k<=j;k++)
-      { 
-        try
-        {
-         if(k==0)
-         {
-            token[k]=temp.subString(0,indexes[k]-1);        // assign the string(as token) from begging to the first occurance
-         }                                                  // of the delimiter.
-         else
-         if(k==j)
-         {
-           token[k]=temp.subString(indexes[k-1]+1,indexes[k]); //assign the string from last occurance of the delimiter till the end
-         }
-         else
-         {
-            token[k]=temp.subString(indexes[k-1]+1,indexes[k]-1);//assign the string b/w two deliminters.
-         }
-        }
-        catch(const char *s)
-        {} 
-      }
-     //There will be many occurance of successive delimiters. So for them empty tokens will be
-     // create. SO they should be removed.      
-     int fin_count=0;
-     
-     for(k=0;k<=j;k++)
-     {
-        if(token[k].getLength()!=0)
-        {
-          fin_count++;   //count only the tokens which have length more thatn 0.
-        }
-     }
-       
-     String *fin_token=new String[fin_count]; //create array of string only for the valid tokens. 
-     i=0;
-     for(k=0;k<=j;k++)
-     {
-       if(token[k].getLength()!=0)
-       {
-          fin_token[i]=token[k];
-          i++;
-       }
-     }
-     n=fin_count;
-     return fin_token;
-   }
-   
-   
+  
    //READING STRING FROM CONSOLE
      istream & operator >>(istream &in,String &s) 
      {    char ch,temp=s.delim;
@@ -286,23 +224,43 @@ class String
           s.length=strlen(s.str);
           return in;
      }
+
+ void stringReverse(char *s)
+ {
+      char temp[strlen(s)+1];
+       int i=0;
+      for(i=0;i<strlen(s);i++)
+      {
+         temp[i]=s[strlen(s)-1-i];
+      }
+      temp[i]='\0';
+
+      for(i=0;i<strlen(s);i++)
+      {
+          s[i]=temp[i];
+      }
+              
+ }
  
     //Conversion from basic to class type
     void String::operator=(int i)
    {
-      String temp=String(13);
+      String temp=String(20);
       int rev=0,mul=10;
-      
-      while(i!=0)
+      temp.str[0]='\0';
+      int k=0;
+      while(i>0)
       {
          if(!((i%10)+48)>=48 &&  ((i%10)+48)<=57) //cheking whether the character is not b/w 30h and 39h, if so throw the error.
          {
+	    //cout<<"Conversion exception\n Invalid character occurance while conversion\n"<< i<<endl;
     	    throw("Conversion exception\n Invalid character occurance while conversion\n");
          }
-         rev= (rev*mul) + (i%10);
+         temp.str[k]= (i%10)+48;
          i/=10;
+         k++;
       }
-       i=0;
+      /* i=0;
       while(rev!=0)
       {
         temp.str[i]= char((rev%10) + 48); //converts integer to string.
@@ -311,7 +269,9 @@ class String
       }
       
       temp.str[i]='\0';
-      
+      */
+      temp.str[k]='\0';
+      stringReverse(temp.str);
       *this=temp;
    }       
    //converts from string to integer.
@@ -411,31 +371,178 @@ String String::operator -(String s)
 {
   return *this- s.str; // NEsting of member functions
 }
-    
 
-int  main()
+int String:: operator == (String s)
 {
-   try
+   if(this->getLength()!= s.getLength())
    {
-     String s;
-     cin>>s;
-     int n;
-     String *temp=new String[30];
-      temp=s.tokenize(' ',n);
-    for(int i=0;i<n;i++)
-    {
-      cout<<endl<<temp[i];
-    }
-   } 
-   catch(const char *s)
-   {
-      cerr<<"Exception caught:\n "<<s;
+      return 0;
    }
-   return 0; 
+   
+   for(int i=0;i<s.getLength();i++)
+   {
+      if(this->str[i] != s.str[i])
+      { 
+           return 0;
+      }
+   }
+  return 1;
 }
 
+int String:: operator ==(char *s)
+{
+   
+   if(this->getLength()!= strlen(s))
+   {
+      return 0;
+   }
+   
+   for(int i=0;i<strlen(s);i++)
+   {
+      if(this->str[i] != s[i])
+      { 
+           return 0;
+      }
+   }
+  return 1;
+}
 
+int countTokens(char *str,char delimiter)
+{
+   char ch=0;
+   int no_tokens=0;
+   int k=0;
+   ch=str[k];
+   while(ch!='\0')
+   {
+       while(ch==delimiter)
+          ch=str[++k]; 
 
+       if(ch=='\0')    
+         break;
+         
+       no_tokens++;
+         
+       while(ch!=delimiter && ch!='\0')
+          ch=str[++k];
+
+       if(ch=='\0')
+         break;
+   }
+   return no_tokens;
+}
+
+String * String::tokenize(char delimiter,int &n)
+{
+     n=countTokens(str,delimiter);
+     if ( n==0 ) 
+       return NULL;
+       
+     String *tokens=new String[n+1];
+     unsigned int start=0,i=0,end=0,k=0,  tokenIndex=0;
+     char ch=0;
+     ch=str[k];
+     
+     while(ch!='\0')
+     {
+                 while(ch==delimiter)
+                     ch=str[++k];
+                     
+                 if(ch=='\0')
+                     break; 
+                    
+                    start=k;
+                    
+                 while(ch!=delimiter && ch!='\0')
+                    ch=str[++k];
+                 end=k;
+                   
+                 tokens[tokenIndex].str=new char[end-start+2];                  
+                 for(i=0;i<end-start;i++)
+                      tokens[tokenIndex].str[i]=str[i+start];
+                 tokens[tokenIndex].str[i]='\0';
+                 tokenIndex++;         
+     }
+   return tokens;
+}
+
+/*   String *  String:: tokenize(char ch,int &n)
+   {
+      if(getLength()==0)//checking for empty string
+      { 
+         n=0;
+         return 0;
+      } 
+      String temp(this->getLength());
+      
+      strcpy(temp.str,this->str);
+      temp.trim(ch);
+      int count=0,j=0,i,k;
+      int indexes[temp.getLength()];
+
+      for(i=0;i<temp.getLength();i++)
+      {
+        if(temp.str[i]==ch)
+        {
+          count++;
+          indexes[j]=i;          //count the number of occurance of the delimiter.
+	  j++;
+	  while(temp.str[i]==ch) 
+	     i++;
+        }
+      }
+      indexes[j]=temp.getLength()-1;//assign even the last character's index.
+      
+      String *token=new String[count];//create array of string for the number of tokens.
+      
+      for(k=0;k<=j;k++)
+      { 
+        try
+        {
+         if(k==0)
+         {
+            token[k]=temp.subString(0,indexes[k]-1);        // assign the string(as token) from begging to the first occurance
+         }                                                  // of the delimiter.
+         else
+         if(k==j)
+         {
+           token[k]=temp.subString(indexes[k-1]+1,indexes[k]); //assign the string from last occurance of the delimiter till the end
+         }
+         else
+         {
+            token[k]=temp.subString(indexes[k-1]+1,indexes[k]-1);//assign the string b/w two deliminters.
+         }
+        }
+        catch(const char *s)
+        {} 
+      }
+     //There will be many occurance of successive delimiters. So for them empty tokens will be
+     // create. SO they should be removed.      
+     int fin_count=0;
+     
+     for(k=0;k<=j;k++)
+     {
+        if(token[k].getLength()!=0)
+        {
+          fin_count++;   //count only the tokens which have length more thatn 0.
+        }
+     }
+       
+     String *fin_token=new String[fin_count]; //create array of string only for the valid tokens. 
+     i=0;
+     for(k=0;k<=j;k++)
+     {
+       if(token[k].getLength()!=0)
+       {
+          token[k].trim(ch);
+          fin_token[i]=token[k];
+          i++;
+       }
+     }
+     n=fin_count;
+     return fin_token;
+   }
+*/
 
 
 
